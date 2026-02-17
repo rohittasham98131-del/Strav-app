@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Strav Admin Master</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+</head>
+<body class="bg-gray-100 p-4 md:p-8">
+    <div class="max-w-6xl mx-auto">
+        <header class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-black text-blue-600 italic">STRAV MASTER</h1>
+            <div class="flex gap-4">
+                <div class="bg-white px-4 py-2 rounded-xl border border-blue-100 text-center shadow-sm">
+                    <p class="text-[10px] font-black text-gray-400 uppercase">Total Users</p>
+                    <p id="total-users" class="text-xl font-black text-blue-600">0</p>
+                </div>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Create -->
+            <div class="bg-white p-6 rounded-3xl shadow-xl border-t-8 border-blue-500">
+                <h2 class="font-black text-xl mb-6">Create Match</h2>
+                <div class="space-y-4 text-sm font-bold">
+                    <input id="t-title" placeholder="Match Title" class="w-full p-3 border rounded-xl outline-none">
+                    <input id="t-game" placeholder="Game (e.g. Ludo)" class="w-full p-3 border rounded-xl outline-none">
+                    <input id="t-time" placeholder="Match Time" class="w-full p-3 border rounded-xl outline-none">
+                    <div class="grid grid-cols-2 gap-4">
+                        <input id="t-fee" type="number" placeholder="Fee ₹" class="p-3 border rounded-xl outline-none">
+                        <input id="t-prize" type="number" placeholder="Prize ₹" class="p-3 border rounded-xl outline-none">
+                    </div>
+                    <input id="t-slots" type="number" placeholder="Total Slots" class="w-full p-3 border rounded-xl outline-none">
+                    <button onclick="createT()" class="w-full py-4 bg-blue-600 text-white font-black rounded-xl">LAUNCH</button>
+                </div>
+            </div>
+
+            <div class="lg:col-span-2 space-y-8">
+                <!-- Matches -->
+                <div class="bg-white p-6 rounded-3xl shadow-lg border-t-8 border-orange-500 text-center">
+                    <h2 class="font-black text-xl mb-6 uppercase">Active Matches</h2>
+                    <div id="matches-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                </div>
+
+                <!-- Payments -->
+                <div class="bg-white p-6 rounded-3xl shadow-lg border-t-8 border-green-500">
+                    <h2 class="font-black text-xl mb-6 uppercase">Pending Payments</h2>
+                    <div id="tx-list" class="space-y-4"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBmFnbCqdXp4FbKtlMa9a1TjZTIUlzB6uE",
+            authDomain: "strav-tournament-app.firebaseapp.com",
+            databaseURL: "https://strav-tournament-app-default-rtdb.firebaseio.com",
+            projectId: "strav-tournament-app",
+            storageBucket: "strav-tournament-app.firebasestorage.app",
+            messagingSenderId: "873709853744",
+            appId: "1:873709853744:web:0d03269c05d480747e61f5"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        db.ref('users').on('value', s => document.getElementById('total-users').innerText = s.numChildren() || 0);
+
+        function createT() {
+            const title = document.getElementById('t-title').value;
+            const game = document.getElementById('t-game').value;
+            const matchTime = document.getElementById('t-time').value;
+            const fee = parseInt(document.getElementById('t-fee').value);
+            const prize = parseInt(document.getElementById('t-prize').value);
+            const totalSlots = parseInt(document.getElementById('t-slots').value);
+            db.ref('tournaments').push({ title, game, matchTime, fee, prize, totalSlots, joinedCount: 0, status: 'open', roomID: '', roomPass: '' });
+            alert("Match is Live!");
+        }
+
+        db.ref('tournaments').on('value', s => {
+            let h = '';
+            s.forEach(t => {
+                const v = t.val();
+                if(v.status === 'open') {
+                    h += `<div class="p-4 bg-gray-50 border rounded-2xl relative text-left">
+                            <button onclick="deleteT('${t.key}')" class="absolute top-2 right-2 text-red-500"><i class="fas fa-trash"></i></button>
+                            <p class="font-black text-sm">${v.title}</p>
+                            <p class="text-[9px] font-black text-blue-500 mb-3">${v.game} | ${v.joinedCount}/${v.totalSlots}</p>
+                            <div class="grid grid-cols-2 gap-2 mb-3">
+                                <input id="rid-${t.key}" value="${v.roomID}" placeholder="Room ID" class="p-2 text-xs border rounded-lg">
+                                <input id="rpw-${t.key}" value="${v.roomPass}" placeholder="Pass" class="p-2 text-xs border rounded-lg">
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="updateRoom('${t.key}')" class="flex-1 bg-blue-600 text-white py-2 rounded-lg text-[10px] font-black">UPDATE</button>
+                                <button onclick="winner('${t.key}', ${v.prize})" class="flex-1 bg-green-500 text-white py-2 rounded-lg text-[10px] font-black">PAY WINNER</button>
+                            </div>
+                        </div>`;
+                }
+            });
+            document.getElementById('matches-grid').innerHTML = h || 'No Active Matches';
+        });
+
+        function updateRoom(tid) {
+            const roomID = document.getElementById(`rid-${tid}`).value;
+            const roomPass = document.getElementById(`rpw-${tid}`).value;
+            db.ref('tournaments/'+tid).update({ roomID, roomPass });
+            alert("Updated!");
+        }
+
+        function deleteT(tid) { if(confirm("Delete Match?")) db.ref('tournaments/'+tid).remove(); }
+
+        async function winner(tid, prize) {
+            const email = prompt("Winner Email:");
+            if(!email) return;
+            const uSnap = await db.ref('users').get();
+            let uid = null;
+            uSnap.forEach(u => { if(u.val().email === email) uid = u.key; });
+            if(uid) {
+                const u = (await db.ref('users/'+uid).get()).val();
+                await db.ref('users/'+uid).update({ balance: (u.balance || 0) + prize });
+                await db.ref('tournaments/'+tid).update({ status: 'completed', winnerEmail: email });
+                alert("Winner Paid Successfully!");
+            } else alert("User Not Found!");
+        }
+
+        db.ref('transactions').orderByChild('status').equalTo('pending').on('value', s => {
+            let h = '';
+            s.forEach(t => {
+                const v = t.val();
+                h += `<div class="p-4 bg-gray-50 border rounded-2xl flex justify-between items-center text-xs">
+                        <div><p class="font-black">${v.type.toUpperCase()} ₹${v.amount}</p><p class="text-gray-400 font-bold">${v.email}</p><p class="text-blue-500 font-black">${v.method}</p></div>
+                        <button onclick="approveTx('${t.key}', '${v.uid}', ${v.amount}, '${v.type}')" class="bg-green-600 text-white px-4 py-2 rounded-xl font-black">APPROVE</button>
+                    </div>`;
+            });
+            document.getElementById('tx-list').innerHTML = h || 'No requests';
+        });
+
+        async function approveTx(tid, uid, amt, type) {
+            const u = (await db.ref('users/'+uid).get()).val();
+            const newBal = type === 'add' ? (u.balance || 0) + amt : (u.balance || 0) - amt;
+            await db.ref('users/'+uid).update({ balance: newBal });
+            await db.ref('transactions/'+tid).update({ status: 'success' });
+            alert("Done!");
+        }
+    </script>
+</body>
+</html>
