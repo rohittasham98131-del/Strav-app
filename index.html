@@ -3,36 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Strav Tournament</title>
+    <title>Strav Tournament - Play & Win</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <style>
+        /* UI Enhancements */
+        body { -webkit-tap-highlight-color: transparent; overscroll-behavior: none; }
+        .nav-btn i { transition: all 0.3s; }
+        .active-nav { color: #2563eb !important; transform: scale(1.1); }
+    </style>
 </head>
 <body class="bg-gray-50 font-sans text-gray-800 overflow-x-hidden">
 
-    <!-- Auth Section -->
+    <!-- Auth Container -->
     <div id="auth-container" class="max-w-md mx-auto min-h-screen flex items-center justify-center p-6">
         <div class="bg-white p-8 rounded-[2.5rem] shadow-2xl w-full border border-blue-50 text-center">
             <h1 class="text-5xl font-black text-blue-600 mb-2 italic tracking-tighter">STRAV</h1>
-            <p class="text-gray-400 font-bold text-[10px] uppercase mb-10 tracking-widest">Premium Tournament</p>
+            <p class="text-gray-400 font-bold text-[10px] uppercase mb-10 tracking-widest">Premium Tournament Gaming</p>
             <div class="space-y-4">
-                <input id="email" type="email" placeholder="Email Address" class="w-full p-4 border rounded-2xl outline-none focus:ring-2 focus:ring-blue-400">
-                <input id="password" type="password" placeholder="Password" class="w-full p-4 border rounded-2xl outline-none focus:ring-2 focus:ring-blue-400">
-                <button onclick="handleAuth()" class="w-full py-4 bg-blue-600 text-white font-black rounded-2xl shadow-lg shadow-blue-200">LOGIN</button>
-                <button onclick="toggleAuth()" class="text-xs font-bold text-blue-500 mt-4 uppercase">New User? Register</button>
+                <input id="email" type="email" placeholder="Email Address" class="w-full p-4 border rounded-2xl outline-none focus:ring-2 focus:ring-blue-400 bg-gray-50">
+                <input id="password" type="password" placeholder="Password" class="w-full p-4 border rounded-2xl outline-none focus:ring-2 focus:ring-blue-400 bg-gray-50">
+                <button onclick="handleAuth()" class="w-full py-4 bg-blue-600 text-white font-black rounded-2xl shadow-lg shadow-blue-200 active:scale-95 transition-all uppercase">Login to Strav</button>
+                <button onclick="toggleAuth()" class="text-xs font-bold text-blue-500 mt-4 uppercase">New User? Register Now</button>
             </div>
         </div>
     </div>
 
-    <!-- Main App Section -->
-    <div id="app-container" class="max-w-md mx-auto min-h-screen pb-24 hidden relative bg-gray-50">
+    <!-- Main App Container -->
+    <div id="app-container" class="max-w-md mx-auto min-h-screen pb-24 hidden relative">
         <header class="bg-white p-4 flex justify-between items-center shadow-sm sticky top-0 z-50 border-b">
             <h1 class="font-black text-2xl text-blue-600 italic tracking-tighter">STRAV</h1>
             <div class="flex items-center gap-3">
-                <button onclick="shareApp()" class="w-9 h-9 flex items-center justify-center text-gray-400 bg-gray-100 rounded-full shadow-inner"><i class="fas fa-share-alt"></i></button>
-                <div onclick="navigate('wallet')" class="bg-blue-50 px-4 py-1.5 rounded-full border border-blue-100 font-black text-blue-700 text-sm cursor-pointer shadow-sm">
+                <button onclick="shareApp()" class="w-9 h-9 flex items-center justify-center text-gray-400 bg-gray-100 rounded-full"><i class="fas fa-share-alt"></i></button>
+                <div onclick="navigate('wallet')" class="bg-blue-50 px-4 py-1.5 rounded-full border border-blue-100 font-black text-blue-700 text-sm shadow-sm cursor-pointer">
                     ₹<span id="user-balance">0</span>
                 </div>
             </div>
@@ -65,49 +71,33 @@
 
         let isLogin = true;
         let currentPage = 'home';
-        let clickCount = 0;
 
-        // --- ANDROID BACK BUTTON TRAP ---
-        // Isse user back dabayega toh app close nahi hoga
-        function initBackControl() {
-            window.history.pushState(null, null, window.location.href);
-            window.onpopstate = function () {
-                if (currentPage !== 'home') {
-                    navigate('home');
-                    window.history.pushState(null, null, window.location.href);
-                } else {
-                    window.history.pushState(null, null, window.location.href);
-                    alert("Click Profile > Sign Out to exit.");
-                }
-            };
-        }
-        initBackControl();
-
-        // --- HIGH EARNING AD LOGIC (Pop-under) ---
-        function triggerHighEarningAd() {
-            clickCount++;
-            // Har 4 clicks par ek baar Pop-under script load hoga
-            // Isse earning bhi maintain rahegi aur user ko space bhi milega
-            if (clickCount % 4 === 0) {
-                const adScript = document.createElement('script');
-                adScript.src = "https://pl28731178.effectivegatecpm.com/64/6f/11/646f11b8e09d654e15dab856d3770e4c.js";
-                document.body.appendChild(adScript);
-                console.log("Pop-under Triggered for Revenue");
+        // --- ANDROID BACK BUTTON FIX ---
+        history.pushState(null, null, location.href);
+        window.onpopstate = function () {
+            if (currentPage !== 'home') {
+                navigate('home');
+                history.pushState(null, null, location.href);
+            } else {
+                history.pushState(null, null, location.href);
+                // Option: alert("Press Home to exit app.");
             }
+        };
+
+        // --- HIGH EARNING AD TRIGGER (Pop-under) ---
+        function triggerPopUnder() {
+            console.log("Revenue Ad Triggered");
+            const script = document.createElement('script');
+            script.src = "https://pl28731178.effectivegatecpm.com/64/6f/11/646f11b8e09d654e15dab856d3770e4c.js";
+            document.body.appendChild(script);
         }
 
-        // Click listener for all actions
-        document.addEventListener('click', () => {
-            if (!document.getElementById('auth-container').classList.contains('hidden')) return;
-            triggerHighEarningAd();
-        });
-
-        function toggleAuth() { isLogin = !isLogin; }
+        function toggleAuth() { isLogin = !isLogin; document.getElementById('auth-btn').innerText = isLogin ? 'LOGIN' : 'SIGN UP'; }
         
         async function handleAuth() {
             const email = document.getElementById('email').value;
             const pass = document.getElementById('password').value;
-            if(!email || !pass) return alert("Fill details!");
+            if(!email || !pass) return alert("Fill all details!");
             try {
                 if(isLogin) await auth.signInWithEmailAndPassword(email, pass);
                 else {
@@ -144,54 +134,63 @@
 
         function renderHome() {
             const main = document.getElementById('main-content');
-            main.innerHTML = `<h2 class="font-black text-xl mb-4 text-gray-700 italic">Live Tournaments</h2><div id="t-list" class="space-y-4"></div>`;
+            main.innerHTML = `<h2 class="font-black text-xl mb-4 text-gray-700 italic tracking-tight">Live Matches</h2><div id="t-list" class="space-y-4"></div>`;
             db.ref('tournaments').on('value', snap => {
                 let html = '';
                 snap.forEach(t => {
                     const v = t.val();
                     if(v.status === 'open') {
-                        html += `<div class="bg-white p-5 rounded-[2rem] shadow-sm border border-gray-100">
+                        html += `
+                        <div class="bg-white p-5 rounded-[2.5rem] shadow-sm border border-gray-100">
                             <div class="flex justify-between items-start">
-                                <div><span class="text-[9px] font-black bg-blue-100 text-blue-600 px-2 py-0.5 rounded uppercase tracking-widest">${v.game}</span><h3 class="font-black text-lg mt-1">${v.title}</h3></div>
+                                <div><span class="text-[9px] font-black bg-blue-100 text-blue-600 px-2 py-0.5 rounded uppercase tracking-widest">${v.game}</span><h3 class="font-black text-lg mt-1">${v.title}</h3><p class="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">${v.matchTime}</p></div>
                                 <div class="text-right text-blue-600 font-black text-xl">₹${v.fee}</div>
                             </div>
-                            <button onclick="joinMatch('${t.key}', ${v.fee})" class="w-full mt-4 py-3.5 bg-blue-600 text-white font-black rounded-2xl shadow-lg">JOIN NOW</button>
+                            <button onclick="joinMatch('${t.key}', ${v.fee})" class="w-full mt-4 py-3.5 bg-blue-600 text-white font-black rounded-2xl shadow-lg active:scale-95 transition-all">JOIN MATCH</button>
                         </div>`;
                     }
                 });
-                document.getElementById('t-list').innerHTML = html || 'No Matches Available';
+                document.getElementById('t-list').innerHTML = html || '<p class="text-center text-gray-400 py-10 font-bold">No Live Matches Available</p>';
             });
         }
 
         async function joinMatch(tid, fee) {
+            triggerPopUnder(); // High Revenue Ad on Join
             const userSnap = await db.ref('users/' + auth.currentUser.uid).get();
             const bal = userSnap.val().balance || 0;
-            if(bal < fee) return alert("Paisa kam hai! Wallet recharge karein.");
-            if(confirm("Join Match?")) {
+            if(bal < fee) return alert("Low Balance! Please add cash.");
+            if(confirm("Confirm Registration?")) {
                 await db.ref('users/' + auth.currentUser.uid).update({ balance: bal - fee });
                 const tSnap = await db.ref('tournaments/' + tid).get();
                 await db.ref('tournaments/' + tid).update({ joinedCount: (tSnap.val().joinedCount || 0) + 1 });
                 await db.ref(`tournaments/${tid}/players/${auth.currentUser.uid}`).set({ email: auth.currentUser.email });
-                alert("Match Joined!");
+                alert("Joined Successfully!");
                 navigate('mycontests');
             }
         }
 
         function renderMyContests() {
             const main = document.getElementById('main-content');
-            main.innerHTML = `<h2 class="font-black text-xl mb-4">My Contests</h2><div id="my-list" class="space-y-4"></div>`;
+            main.innerHTML = `<h2 class="font-black text-xl mb-4">My Joined Matches</h2><div id="my-list" class="space-y-4"></div>`;
             db.ref('tournaments').on('value', snap => {
                 let html = '';
                 snap.forEach(t => {
                     const v = t.val();
                     if(v.players && v.players[auth.currentUser.uid]) {
-                        html += `<div class="bg-white p-5 rounded-3xl border-l-[10px] border-blue-600 shadow-sm">
+                        html += `
+                        <div class="bg-white p-5 rounded-3xl border-l-[10px] border-blue-600 shadow-sm border">
                             <h3 class="font-black text-lg">${v.title}</h3>
-                            <p class="text-xs font-bold mt-2 text-gray-500">Room ID: ${v.roomID || 'TBA'} | Pass: ${v.roomPass || 'TBA'}</p>
+                            <div class="mt-4 p-4 bg-blue-50 rounded-2xl border border-dashed border-blue-200">
+                                <p class="text-[10px] font-black text-blue-600 uppercase mb-2">Room Details</p>
+                                <div class="flex justify-between font-bold text-xs">
+                                    <span>ID: ${v.roomID || 'TBA'}</span>
+                                    <span>Pass: ${v.roomPass || 'TBA'}</span>
+                                </div>
+                            </div>
                         </div>`;
                     }
                 });
-                document.getElementById('my-list').innerHTML = html || 'No joined matches.';
+                document.getElementById('my-list').innerHTML = html || '<p class="text-center text-gray-400 py-10">You haven\'t joined any match yet.</p>';
             });
         }
 
@@ -199,19 +198,20 @@
             const main = document.getElementById('main-content');
             main.innerHTML = `
                 <div class="bg-gradient-to-br from-blue-600 to-blue-400 p-8 rounded-[2.5rem] text-white text-center shadow-xl">
-                    <p class="text-xs uppercase opacity-70 mb-2 font-bold tracking-widest">Balance</p>
+                    <p class="text-[10px] font-black uppercase opacity-70 mb-2 tracking-widest">Available Balance</p>
                     <h2 class="text-5xl font-black italic tracking-tighter">₹${document.getElementById('user-balance').innerText}</h2>
                 </div>
                 <div class="grid grid-cols-2 gap-4 mt-6">
-                    <button onclick="addCash()" class="bg-white p-5 rounded-3xl border font-black text-xs text-green-500 shadow-sm active:scale-95 transition-all">ADD CASH</button>
-                    <button onclick="withdraw()" class="bg-white p-5 rounded-3xl border font-black text-xs text-red-500 shadow-sm active:scale-95 transition-all">WITHDRAW</button>
+                    <button onclick="addCash()" class="bg-white p-6 rounded-3xl border border-green-100 flex flex-col items-center gap-2 active:scale-95 transition-all"><i class="fas fa-plus text-green-500"></i><span class="font-black text-xs">ADD CASH</span></button>
+                    <button onclick="withdraw()" class="bg-white p-6 rounded-3xl border border-red-100 flex flex-col items-center gap-2 active:scale-95 transition-all"><i class="fas fa-university text-red-500"></i><span class="font-black text-xs">WITHDRAW</span></button>
                 </div>
             `;
         }
 
         async function addCash() {
-            const amt = prompt("Amount ₹:");
-            const ref = prompt("Transaction ID (Ref):");
+            triggerPopUnder(); // Revenue Ad
+            const amt = prompt("Enter Amount ₹:");
+            const ref = prompt("Transaction ID:");
             if(amt && ref) {
                 await db.ref('transactions').push({ uid: auth.currentUser.uid, email: auth.currentUser.email, amount: parseInt(amt), method: ref, type: 'add', status: 'pending', timestamp: Date.now() });
                 alert("Deposit Request Sent!");
@@ -219,6 +219,7 @@
         }
 
         async function withdraw() {
+            triggerPopUnder(); // Revenue Ad
             const amt = prompt("Amount ₹:");
             const upi = prompt("UPI ID:");
             if(amt && upi) {
@@ -229,22 +230,27 @@
 
         function renderProfile() {
             const main = document.getElementById('main-content');
-            main.innerHTML = `<div class="bg-white p-8 rounded-[2.5rem] shadow-sm border text-center">
-                <div class="w-20 h-20 bg-blue-100 rounded-full mx-auto mb-4 flex items-center justify-center text-blue-600 text-3xl font-black border-4 border-white shadow-md">${auth.currentUser.email[0].toUpperCase()}</div>
-                <h2 class="font-black text-lg text-gray-800">${auth.currentUser.email}</h2>
-                <div class="mt-8 space-y-4">
-                    <a href="https://t.me/strav_support" class="block p-4 bg-gray-50 rounded-2xl border font-black text-xs text-[#0088cc] shadow-sm">TELEGRAM SUPPORT</a>
-                    <button onclick="shareApp()" class="w-full p-4 bg-orange-50 rounded-2xl border font-black text-xs text-orange-600 shadow-sm">SHARE APP</button>
-                    <button onclick="auth.signOut()" class="w-full text-red-500 font-black text-xs pt-4 italic">Sign Out</button>
-                </div>
-            </div>`;
+            main.innerHTML = `
+                <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border text-center">
+                    <div class="w-20 h-20 bg-blue-100 rounded-full mx-auto mb-4 flex items-center justify-center text-blue-600 text-3xl font-black border-4 border-white shadow-md">${auth.currentUser.email[0].toUpperCase()}</div>
+                    <h2 class="font-black text-lg text-gray-800">${auth.currentUser.email}</h2>
+                    <div class="mt-10 space-y-4">
+                        <a href="https://t.me/strav_support" target="_blank" class="block p-4 bg-gray-50 rounded-2xl border font-black text-xs text-[#0088cc] shadow-sm">TELEGRAM SUPPORT</a>
+                        <button onclick="shareApp()" class="w-full p-4 bg-orange-50 rounded-2xl border font-black text-xs text-orange-600 shadow-sm">INVITE FRIENDS</button>
+                        <button onclick="auth.signOut()" class="w-full text-red-500 font-black text-sm pt-4 italic">Sign Out from Strav</button>
+                    </div>
+                </div>`;
         }
 
         function shareApp() {
-            const text = "Play Strav Tournament & Win Cash! Download: " + window.location.href;
+            const text = "🏆 Join STRAV Tournament! Play & Win Cash Every Day. Download Now: " + window.location.href;
             window.open(`https://wa.me/?text=${encodeURIComponent(text)}`);
         }
     </script>
+
+    <!-- SOCIAL BAR SCRIPT (Non-intrusive) -->
+    <script src="https://pl28736796.effectivegatecpm.com/01/1a/70/011a70f01149af3f683b6ff54e2d8392.js"></script>
+
 </body>
 </html>
-    
+            
